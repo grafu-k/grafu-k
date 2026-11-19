@@ -1,0 +1,17 @@
+{%- set bilder = galerie if (galerie and galerie.length) else ([bild] if bild else []) %}
+{%- if bilder.length %}
+<div class="galerie" data-galerie>
+  <div class="galerie-buehne">
+    {%- for b in bilder %}
+    <button class="galerie-bild{% if loop.first %} aktiv{% endif %}" data-index="{{ loop.index0 }}" aria-label="Bild {{ loop.index }} von {{ bilder.length }} vergrößern">
+      <img src="{{ b }}" alt="{{ title }} – Bild {{ loop.index }}" {% if not loop.first %}loading="lazy" {% endif %}decoding="async">
+    </button>
+    {%- endfor %}
+    {%- if bilder.length > 1 %}
+    <button class="galerie-pfeil zurueck" data-schritt="-1" aria-label="Vorheriges Bild">❮</button>
+    <button class="galerie-pfeil weiter" data-schritt="1" aria-label="Nächstes Bild">❯</button>
+    <span class="galerie-zaehler"><span data-nr>1</span> / {{ bilder.length }}</span>
+    {%- endif %}
+  </div>
+</div>
+{%- endif %}

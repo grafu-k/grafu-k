@@ -1,0 +1,35 @@
+---
+layout: layouts/base.njk
+title: Startseite
+koerperklasse: startseite
+---
+<section class="held" style="background-image:url('{{ startseite.titelbild }}')">
+  <div class="held-dunkel"></div>
+  <p class="held-zitat">{{ startseite.zitat }}</p>
+</section>
+
+{%- if startseite.youtube_video %}
+<section class="video-bereich">
+  <div class="video" data-youtube="{{ startseite.youtube_video }}">
+    <button class="video-start" aria-label="Video abspielen (lädt Inhalte von YouTube)">
+      <img src="{{ startseite.video_vorschaubild }}" alt="" loading="lazy">
+      <span class="video-play" aria-hidden="true"></span>
+      <span class="video-hinweis">Mit Klick wird das Video von YouTube geladen.</span>
+    </button>
+  </div>
+</section>
+{%- endif %}
+
+<section class="seite">
+  <h2 class="abschnitt">Aktuelle Einsätze</h2>
+  <div class="raster">
+    {%- asyncEach eintrag in collections.einsaetze | limit(startseite.anzahl_einsaetze) %}{% set art = "einsatz" %}{% include "partials/karte.njk" %}{% endeach %}
+  </div>
+  <p class="mehr"><a class="knopf" href="/einsaetze/">Alle Einsätze</a></p>
+
+  <h2 class="abschnitt">News</h2>
+  <div class="raster">
+    {%- asyncEach eintrag in collections.news | limit(startseite.anzahl_news) %}{% set art = "news" %}{% include "partials/karte.njk" %}{% endeach %}
+  </div>
+  <p class="mehr"><a class="knopf" href="/news/">Alle News</a></p>
+</section>

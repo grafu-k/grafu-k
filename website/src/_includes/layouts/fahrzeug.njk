@@ -1,0 +1,14 @@
+---
+layout: layouts/base.njk
+---
+<section class="seite">
+  <h1 class="seitentitel">{{ title }}</h1>
+  <div class="eintrag">
+    {% include "partials/galerie.njk" %}
+    <article class="eintrag-text">
+      {% if ueberschrift %}<h2>{{ ueberschrift }}</h2>{% endif %}
+      {{ content | safe }}
+    </article>
+  </div>
+  <nav class="blaettern"><span></span><a href="{{ '/fahrzeuge/historisch/' if historisch else '/fahrzeuge/' }}" class="zurueck">Zur Übersicht</a><span></span></nav>
+</section>

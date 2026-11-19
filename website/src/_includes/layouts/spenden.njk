@@ -1,0 +1,18 @@
+---
+layout: layouts/base.njk
+---
+<section class="seite seite-schmal">
+  <h1 class="seitentitel">{{ title }}</h1>
+  <div class="text spenden">
+    <h2>{{ ueberschrift }}</h2>
+    {{ content | safe }}
+    <h2>Spendenkonto</h2>
+    <p class="konto">
+      <span>Empfänger: <span data-kopieren>{{ empfaenger }}</span></span><br>
+      <span>IBAN: <span data-kopieren>{{ iban }}</span></span><br>
+      Bank: {{ bank }}
+    </p>
+    <h2>Kontakt</h2>
+    <p>{{ site.langname }}<br>E-Mail: <a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
+  </div>
+</section>

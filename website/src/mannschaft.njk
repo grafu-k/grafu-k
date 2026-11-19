@@ -1,0 +1,13 @@
+---
+layout: layouts/base.njk
+title: Mannschaft
+permalink: /mannschaft/
+---
+<section class="seite">
+  <h1 class="seitentitel">Mannschaft</h1>
+  <ul class="kachel-links">
+    {%- for m in collections.mannschaft %}{% if m.data.im_menue !== false %}
+    <li><a href="{{ m.url }}">{{ m.data.title }}<span>{{ m.data.personen.length }} Personen</span></a></li>
+    {%- endif %}{% endfor %}
+  </ul>
+</section>

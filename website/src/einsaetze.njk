@@ -1,0 +1,16 @@
+---
+layout: layouts/base.njk
+title: Einsätze
+permalink: /einsaetze/
+---
+<section class="seite">
+  <h1 class="seitentitel">EINSÄTZE</h1>
+  {%- set jahre = collections.einsaetze | nachJahr %}
+  <nav class="jahre" aria-label="Jahre">{% for g in jahre %}<a href="#jahr-{{ g.jahr }}">{{ g.jahr }}</a>{% endfor %}</nav>
+  {%- asyncEach g in jahre %}
+  <h2 class="abschnitt" id="jahr-{{ g.jahr }}">{{ g.jahr }}</h2>
+  <div class="raster">
+    {%- asyncEach eintrag in g.items %}{% set art = "einsatz" %}{% include "partials/karte.njk" %}{% endeach %}
+  </div>
+  {%- endeach %}
+</section>

@@ -1,0 +1,19 @@
+{
+  "name": "ff-ststefan-website",
+  "private": true,
+  "type": "module",
+  "description": "Website der Freiwilligen Feuerwehr St. Stefan ob Leoben",
+  "scripts": {
+    "start": "eleventy --serve",
+    "build": "eleventy",
+    "cms": "decap-server"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "3.1.2",
+    "@11ty/eleventy-img": "6.0.4",
+    "markdown-it": "14.1.0"
+  },
+  "devDependencies": {
+    "decap-server": "3.1.2"
+  }
+}

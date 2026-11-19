@@ -1,0 +1,194 @@
+# Decap CMS – Redaktionsoberfläche unter /admin/
+# Anleitung siehe website/ANLEITUNG.md
+backend:
+  name: github
+  repo: grafu-k/grafu-k        # GitHub-Repository der Website
+  branch: main
+  base_url: https://api.netlify.com   # Netlify übernimmt den GitHub-Login
+  commit_messages:
+    create: "Neu: {{collection}} „{{slug}}“"
+    update: "Geändert: {{collection}} „{{slug}}“"
+    delete: "Gelöscht: {{collection}} „{{slug}}“"
+    uploadMedia: "Bild hochgeladen: {{path}}"
+    deleteMedia: "Bild gelöscht: {{path}}"
+
+# Lokal testen: "npm run cms" in einem 2. Terminal, dann http://localhost:8080/admin/
+local_backend: true
+
+locale: de
+site_url: https://www.ff-ststefan.at
+display_url: https://www.ff-ststefan.at
+logo_url: /assets/img/logo.png
+
+media_folder: website/src/bilder
+public_folder: /bilder
+
+collections:
+  # ------------------------------------------------------------------ Einsätze
+  - name: einsaetze
+    label: Einsätze
+    label_singular: Einsatz
+    description: "Einsatzberichte. Neue Einsätze erscheinen automatisch oben in der Übersicht und auf der Startseite."
+    folder: website/src/einsaetze
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{date | date('DD.MM.YYYY')}} – {{stichwort}}"
+    sortable_fields: { fields: ["date", "title"], default: { field: date, direction: descending } }
+    view_groups: [{ label: Jahr, field: date, pattern: "\\d{4}" }]
+    fields:
+      - { label: "Titel (Überschrift der Seite)", name: title, widget: string, hint: "z. B. Bahndammbrand" }
+      - { label: "Einsatzstichwort (Kachel)", name: stichwort, widget: string, hint: "z. B. 🔥 B09-Hecken-Wiese // Bahndammbrand 🔥   oder   🛠️ T03-VU-Berg.-Öl // PKW Bergung 🛠️" }
+      - { label: "Datum der Alarmierung", name: date, widget: datetime, format: "YYYY-MM-DD", date_format: "DD.MM.YYYY", time_format: false, picker_utc: true }
+      - { label: "Uhrzeit (optional)", name: uhrzeit, widget: string, required: false, hint: "z. B. 06:05" }
+      - { label: "Eigener Kachel-Text (optional)", name: kartentext, widget: string, required: false, hint: "Leer lassen = automatisch „Sirenenalarm am TT.MM.JJJJ um HH:MM Uhr 🚨“" }
+      - { label: "Titelbild (Kachel)", name: bild, widget: image, required: false }
+      - label: Bildergalerie
+        name: galerie
+        widget: list
+        required: false
+        hint: "Bilder für die Einsatzseite. Reihenfolge per Drag & Drop."
+        field: { label: Bild, name: bild, widget: image }
+      - label: Bericht
+        name: body
+        widget: markdown
+        required: false
+        hint: "Ohne Text und ohne Galerie wird nur eine Kachel (ohne eigene Seite) angezeigt."
+        default: "**Sirenenalarm:** TT.MM.JJJJ um HH:MM Uhr\n\nText …\n\n**Eingesetzte Kräfte:**\nFeuerwehr St. Stefan ob Leoben"
+
+  # ------------------------------------------------------------------ News
+  - name: news
+    label: News
+    label_singular: News-Beitrag
+    folder: website/src/news
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    summary: "{{date | date('DD.MM.YYYY')}} – {{title}}"
+    sortable_fields: { fields: ["date", "title"], default: { field: date, direction: descending } }
+    view_groups: [{ label: Jahr, field: date, pattern: "\\d{4}" }]
+    fields:
+      - { label: Titel, name: title, widget: string }
+      - { label: Datum, name: date, widget: datetime, format: "YYYY-MM-DD", date_format: "DD.MM.YYYY", time_format: false, picker_utc: true }
+      - { label: "Kurztext (Kachel, optional)", name: kartentext, widget: text, required: false }
+      - { label: "Titelbild (Kachel)", name: bild, widget: image, required: false }
+      - label: Bildergalerie
+        name: galerie
+        widget: list
+        required: false
+        field: { label: Bild, name: bild, widget: image }
+      - { label: Text, name: body, widget: markdown, required: false }
+
+  # ------------------------------------------------------------------ Fahrzeuge
+  - name: fahrzeuge
+    label: Fahrzeuge
+    label_singular: Fahrzeug
+    folder: website/src/fahrzeuge
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}} ({{untertitel}})"
+    sortable_fields: { fields: ["reihenfolge", "title"], default: { field: reihenfolge, direction: ascending } }
+    fields:
+      - { label: "Name (z. B. HLF-3)", name: title, widget: string }
+      - { label: "Untertitel (Kachel)", name: untertitel, widget: string, required: false }
+      - { label: "Überschrift auf der Seite", name: ueberschrift, widget: string, required: false }
+      - { label: "Reihenfolge", name: reihenfolge, widget: number, value_type: int, default: 10 }
+      - { label: "Historisches Fahrzeug (ausgeschieden)", name: historisch, widget: boolean, default: false }
+      - { label: "Titelbild (Kachel)", name: bild, widget: image, required: false }
+      - label: Bildergalerie
+        name: galerie
+        widget: list
+        required: false
+        field: { label: Bild, name: bild, widget: image }
+      - { label: Beschreibung, name: body, widget: markdown, required: false }
+
+  # ------------------------------------------------------------------ Mannschaft
+  - name: mannschaft
+    label: Mannschaft
+    label_singular: Gruppe
+    description: "Kommando, Ausschuss, Aktivstand … Personen hinzufügen, entfernen oder per Drag & Drop umsortieren."
+    folder: website/src/mannschaft
+    create: true
+    slug: "{{slug}}"
+    sortable_fields: { fields: ["reihenfolge", "title"], default: { field: reihenfolge, direction: ascending } }
+    fields:
+      - { label: "Name der Gruppe", name: title, widget: string }
+      - { label: "Reihenfolge im Menü", name: reihenfolge, widget: number, value_type: int, default: 10 }
+      - { label: "Im Menü „Mannschaft“ anzeigen", name: im_menue, widget: boolean, default: true, required: false }
+      - label: Personen
+        name: personen
+        widget: list
+        summary: "{{fields.name}}"
+        fields:
+          - { label: "Dienstgrad und Name", name: name, widget: string, hint: "z. B. HBI MAURER Clemens" }
+          - { label: "Funktion(en)", name: funktion, widget: text, required: false, hint: "Mehrere Funktionen: eine pro Zeile" }
+          - { label: Foto, name: bild, widget: image, required: false }
+      - { label: "Text über der Liste (optional)", name: body, widget: markdown, required: false }
+
+  # ------------------------------------------------------------------ Seiten
+  - name: seiten
+    label: Seiten
+    files:
+      - label: Startseite
+        name: startseite
+        file: website/src/_data/startseite.json
+        fields:
+          - { label: Zitat, name: zitat, widget: text }
+          - { label: Titelbild, name: titelbild, widget: image }
+          - { label: "YouTube-Video-ID", name: youtube_video, widget: string, required: false, hint: "Der Teil nach watch?v= bzw. youtu.be/ – leer lassen = kein Video" }
+          - { label: "Video-Vorschaubild", name: video_vorschaubild, widget: image, required: false }
+          - { label: "Anzahl Einsätze auf der Startseite", name: anzahl_einsaetze, widget: number, value_type: int }
+          - { label: "Anzahl News auf der Startseite", name: anzahl_news, widget: number, value_type: int }
+      - label: Spenden
+        name: spenden
+        file: website/src/seiten/spenden.md
+        fields:
+          - { label: Titel, name: title, widget: hidden }
+          - { label: Permalink, name: permalink, widget: hidden }
+          - { label: Layout, name: layout, widget: hidden }
+          - { label: Überschrift, name: ueberschrift, widget: string }
+          - { label: Text, name: body, widget: markdown }
+          - { label: Empfänger, name: empfaenger, widget: string }
+          - { label: IBAN, name: iban, widget: string }
+          - { label: Bank, name: bank, widget: string }
+      - label: Links
+        name: links
+        file: website/src/seiten/links.md
+        fields:
+          - { label: Titel, name: title, widget: hidden }
+          - { label: Permalink, name: permalink, widget: hidden }
+          - { label: Layout, name: layout, widget: hidden }
+          - { label: Überschrift, name: ueberschrift, widget: string }
+          - label: Links
+            name: links
+            widget: list
+            summary: "{{fields.titel}}"
+            fields:
+              - { label: Titel, name: titel, widget: string }
+              - { label: Adresse (URL), name: url, widget: string }
+      - label: Impressum
+        name: impressum
+        file: website/src/seiten/impressum.md
+        fields: &textseite
+          - { label: Titel, name: title, widget: string }
+          - { label: Permalink, name: permalink, widget: hidden }
+          - { label: Layout, name: layout, widget: hidden }
+          - { label: Text, name: body, widget: markdown }
+      - { label: Datenschutzerklärung, name: datenschutz, file: website/src/seiten/datenschutzerklaerung.md, fields: *textseite }
+      - { label: Wetter / Regenradar, name: wetter, file: website/src/seiten/wetter.md, fields: *textseite }
+
+  # ------------------------------------------------------------------ Einstellungen
+  - name: einstellungen
+    label: Einstellungen
+    files:
+      - label: Kontakt & Social Media
+        name: site
+        file: website/src/_data/site.json
+        fields:
+          - { label: "Kurzname", name: name, widget: string }
+          - { label: "Voller Name", name: langname, widget: string }
+          - { label: "Adresse der Website", name: url, widget: string }
+          - { label: Anschrift, name: adresse, widget: text }
+          - { label: E-Mail, name: email, widget: string }
+          - { label: Telefon, name: telefon, widget: string }
+          - { label: Facebook, name: facebook, widget: string }
+          - { label: Instagram, name: instagram, widget: string }
+          - { label: YouTube, name: youtube, widget: string }

@@ -1,0 +1,25 @@
+---
+layout: layouts/base.njk
+---
+{%- set liste = collections.einsaetze if typ == "einsatz" else collections.news %}
+{%- set uebersicht = "/einsaetze/" if typ == "einsatz" else "/news/" %}
+<section class="seite">
+  <h1 class="seitentitel">{{ title }}</h1>
+  <div class="eintrag">
+    {% include "partials/galerie.njk" %}
+    <article class="eintrag-text">
+      {%- if typ == "einsatz" %}
+      <h2>{{ stichwort or title }}</h2>
+      {%- else %}
+      <p class="eintrag-datum">{{ date | datumLang }}</p>
+      {%- endif %}
+      {{ content | safe }}
+    </article>
+  </div>
+  {%- set n = liste | nachbarn(page.url) %}
+  <nav class="blaettern" aria-label="Weitere Beiträge">
+    {% if n.neuer %}<a href="{{ n.neuer.url }}" class="neuer">❮ {{ n.neuer.data.title }}</a>{% else %}<span></span>{% endif %}
+    <a href="{{ uebersicht }}" class="zurueck">Zur Übersicht</a>
+    {% if n.aelter %}<a href="{{ n.aelter.url }}" class="aelter">{{ n.aelter.data.title }} ❯</a>{% else %}<span></span>{% endif %}
+  </nav>
+</section>

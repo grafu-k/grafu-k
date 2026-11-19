@@ -1,0 +1,16 @@
+---
+layout: layouts/base.njk
+---
+<section class="seite">
+  <h1 class="seitentitel">{{ title }}</h1>
+  {{ content | safe }}
+  <div class="team">
+    {%- asyncEach p in personen %}
+    <div class="person">
+      {%- if p.bild %}{% vorschau p.bild, p.name, 300, "person-bild" %}{% else %}<div class="person-bild person-leer" aria-hidden="true"></div>{% endif %}
+      <div class="person-name">{{ p.name }}</div>
+      {%- for f in p.funktion | zeilen %}<div class="person-funktion">{{ f }}</div>{% endfor %}
+    </div>
+    {%- endeach %}
+  </div>
+</section>

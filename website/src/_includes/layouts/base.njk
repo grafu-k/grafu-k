@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if title and page.url != "/" %}{{ title | striptags }} – {% endif %}{{ site.name }}</title>
+  <meta name="description" content="{{ beschreibung or (site.langname + ' – Einsätze, News, Fahrzeuge und Mannschaft.') }}">
+  <meta property="og:title" content="{{ title or site.name }}">
+  <meta property="og:site_name" content="{{ site.name }}">
+  {% if bild %}<meta property="og:image" content="{{ site.url }}{{ bild }}">{% endif %}
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32">
+  <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="/assets/js/main.js" defer></script>
+</head>
+<body class="{{ koerperklasse }}">
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+<header class="kopf">
+  <a class="logo" href="/" aria-label="Startseite {{ site.name }}"><img src="/assets/img/logo.png" alt="Logo {{ site.name }}" width="95" height="60"></a>
+  <button class="menue-knopf" aria-expanded="false" aria-controls="hauptmenue" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
+  <nav id="hauptmenue" class="nav" aria-label="Hauptmenü">
+    <ul>
+    {%- for punkt in navigation | menue(collections) %}
+      {%- set unter = punkt.unter %}
+      <li class="nav-punkt">
+        <button class="nav-oben" aria-expanded="false">{{ punkt.titel }}</button>
+        <ul class="nav-unter">
+          {%- for u in unter %}
+          <li><a href="{{ u.url }}"{% if u.url == page.url %} aria-current="page"{% endif %}{% if "http" in u.url %} target="_blank" rel="noopener"{% endif %}>{{ u.titel }}</a></li>
+          {%- endfor %}
+        </ul>
+      </li>
+    {%- endfor %}
+    </ul>
+  </nav>
+</header>
+
+<main id="inhalt">
+{{ content | safe }}
+</main>
+
+<footer class="fuss">
+  <ul class="sozial">
+    <li><a href="{{ site.instagram }}" target="_blank" rel="noopener" aria-label="Instagram">{% include "partials/icon-instagram.njk" %}</a></li>
+    <li><a href="{{ site.youtube }}" target="_blank" rel="noopener" aria-label="YouTube">{% include "partials/icon-youtube.njk" %}</a></li>
+    <li><a href="{{ site.facebook }}" target="_blank" rel="noopener" aria-label="Facebook">{% include "partials/icon-facebook.njk" %}</a></li>
+  </ul>
+  <p>{{ site.name }}</p>
+  <p>© {{ jetzt.getFullYear() }}, All Rights Reserved</p>
+  <p class="fuss-links"><a href="/datenschutzerklaerung/">Datenschutzerklärung</a> <span>|</span> <a href="/impressum/">Impressum</a> <span>|</span> <a href="/spenden/">Spenden</a></p>
+</footer>
+</body>
+</html>

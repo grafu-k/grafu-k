@@ -1,0 +1,19 @@
+{#- Kachel für Übersichten. Erwartet: eintrag, art ("einsatz" | "news" | "fahrzeug") -#}
+{%- set d = eintrag.data %}
+{%- set tag = "a" if eintrag.url else "div" %}
+<{{ tag }} class="karte"{% if eintrag.url %} href="{{ eintrag.url }}"{% endif %}>
+  <div class="karte-bild">{% if d.bild %}{% vorschau d.bild, d.title, 420 %}{% endif %}</div>
+  <div class="karte-text">
+    {%- if art == "einsatz" %}
+    <h3>{{ d.stichwort or d.title }}</h3>
+    <p>{{ d | alarmtext }}</p>
+    {%- elif art == "fahrzeug" %}
+    <h3>{{ d.title }}</h3>
+    <p>{{ d.untertitel }}</p>
+    {%- else %}
+    <h3>{{ d.title }}</h3>
+    <p class="karte-datum">{{ d.date | datum }}</p>
+    {%- if d.kartentext %}<p>{{ d.kartentext }}</p>{% endif %}
+    {%- endif %}
+  </div>
+</{{ tag }}>

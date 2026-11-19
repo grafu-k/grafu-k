@@ -1,0 +1,12 @@
+---
+layout: layouts/base.njk
+title: Fahrzeuge
+permalink: /fahrzeuge/
+---
+<section class="seite">
+  <h1 class="seitentitel">Fahrzeuge</h1>
+  <div class="raster">
+    {%- asyncEach eintrag in collections.fahrzeuge | where("historisch", false) %}{% set art = "fahrzeug" %}{% include "partials/karte.njk" %}{% endeach %}
+  </div>
+  <p class="mehr"><a class="knopf" href="/fahrzeuge/historisch/">Historische Fahrzeuge</a></p>
+</section>
