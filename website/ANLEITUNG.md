@@ -89,3 +89,44 @@ die Zeilen `repo:` und `branch:` sowie die Pfade (`website/src/…`) anpassen.
 ### Menü ändern
 `src/_data/navigation.js`. Die Untermenüs *Fahrzeuge* und *Mannschaft* werden automatisch aus den
 Inhalten erzeugt.
+
+---
+
+## 3. Automatischer Import von Instagram
+
+Neue Beiträge vom Instagram-Account der Feuerwehr erscheinen **automatisch** auf der Website
+(Prüfung alle 3 Stunden):
+
+* Beiträge mit „Sirenenalarm“ oder einem Alarmstichwort (z. B. `B09-…`, `T03V-…`) → **Einsätze**.
+  Datum und Uhrzeit werden aus „Sirenenalarm am TT.MM.JJJJ um HH:MM Uhr“ gelesen.
+* Alle anderen Beiträge → **News**.
+* Erste Zeile der Bildunterschrift = Titel, der Rest = Text. Hashtag-Zeilen werden weggelassen.
+* Alle Fotos (auch Karussells) werden auf die Website kopiert, ein Link zum Instagram-Beitrag wird ergänzt.
+* Falsch eingeordnet? Im Beitrag `#news` oder `#einsatz` verwenden – oder den Eintrag im Admin
+  verschieben/bearbeiten. Importierte Einträge können im Admin ganz normal geändert werden
+  und werden **nicht** wieder überschrieben.
+
+Einstellungen in `src/_data/instagram.json`:
+
+| Feld | Bedeutung |
+|---|---|
+| `ab` | Nur Beiträge ab diesem Datum importieren (ältere sind schon auf der Website). |
+| `einsaetze` / `news` | `false` = diese Art nicht importieren. |
+| `importiert` | Liste der bereits importierten Beiträge (nicht von Hand ändern). |
+
+### Einmalige Einrichtung
+1. Der Instagram-Account muss ein **professionelles Konto** sein (Instagram-App → Einstellungen →
+   Kontotyp → „Professionelles Konto“, Typ *Creator* oder *Unternehmen*; kostenlos).
+2. Auf [developers.facebook.com](https://developers.facebook.com/) eine App anlegen
+   (Anwendungsfall: *Instagram-API*) → *API-Einrichtung mit Instagram-Login* →
+   den Feuerwehr-Account hinzufügen → **Zugriffstoken generieren**.
+3. Im GitHub-Repository unter *Settings → Secrets and variables → Actions → New repository secret*
+   ein Secret **`INSTAGRAM_TOKEN`** mit diesem Token anlegen.
+4. Test: *Actions → Instagram-Import → Run workflow*. Danach läuft es automatisch.
+
+Der Token gilt 60 Tage und wird bei jedem Lauf automatisch verlängert. Falls Instagram dabei
+einen neuen Token liefert, kann das Secret automatisch aktualisiert werden – dazu zusätzlich ein
+Secret `GH_SECRETS_TOKEN` (GitHub Personal Access Token mit Recht „Secrets: Read and write“) anlegen.
+Läuft der Import länger als 60 Tage nicht, einfach einen neuen Token erzeugen und das Secret ersetzen.
+
+Lokal testen: `INSTAGRAM_TOKEN=... DRY_RUN=1 node scripts/instagram-import.mjs` (zeigt nur an, speichert nichts).

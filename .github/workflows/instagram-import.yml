@@ -1,0 +1,57 @@
+# Holt alle 3 Stunden neue Instagram-Beiträge und stellt sie als Einsatz/News auf die Website.
+name: Instagram-Import
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch: {}   # manuell starten: GitHub → Actions → Instagram-Import → Run workflow
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci --omit=dev
+
+      - name: Neue Beiträge holen
+        id: import
+        env:
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+        run: node scripts/instagram-import.mjs
+
+      - name: Änderungen speichern
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "Instagram-Import"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add src/einsaetze src/news src/bilder src/_data/instagram.json
+            git commit -m "Instagram-Import: neue Beiträge"
+            git push
+          else
+            echo "Keine neuen Beiträge."
+          fi
+
+      # Optional: falls Instagram beim Verlängern einen neuen Token liefert, wird das Secret
+      # automatisch aktualisiert. Dafür ein Secret GH_SECRETS_TOKEN (Personal Access Token mit
+      # Berechtigung "Secrets: Read and write" für dieses Repository) anlegen.
+      - name: Token-Secret aktualisieren
+        if: steps.import.outputs.neuer_token != '' && env.GH_SECRETS_TOKEN != ''
+        env:
+          GH_SECRETS_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+        run: gh secret set INSTAGRAM_TOKEN --body "${{ steps.import.outputs.neuer_token }}" --repo "$GITHUB_REPOSITORY"

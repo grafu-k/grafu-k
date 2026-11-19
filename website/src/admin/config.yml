@@ -54,6 +54,7 @@ collections:
         required: false
         hint: "Ohne Text und ohne Galerie wird nur eine Kachel (ohne eigene Seite) angezeigt."
         default: "**Sirenenalarm:** TT.MM.JJJJ um HH:MM Uhr\n\nText …\n\n**Eingesetzte Kräfte:**\nFeuerwehr St. Stefan ob Leoben"
+      - { label: "Instagram-Beitrag (automatisch)", name: instagram, widget: string, required: false, hint: "Wird beim automatischen Import ausgefüllt." }
 
   # ------------------------------------------------------------------ News
   - name: news
@@ -76,6 +77,7 @@ collections:
         required: false
         field: { label: Bild, name: bild, widget: image }
       - { label: Text, name: body, widget: markdown, required: false }
+      - { label: "Instagram-Beitrag (automatisch)", name: instagram, widget: string, required: false, hint: "Wird beim automatischen Import ausgefüllt." }
 
   # ------------------------------------------------------------------ Fahrzeuge
   - name: fahrzeuge
