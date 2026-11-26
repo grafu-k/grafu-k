@@ -7,6 +7,7 @@ direkt wieder herausziehen, z. B. in ein Chatfenster von Claude oder ChatGPT.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QMenu,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QVBoxLayout,
@@ -59,11 +61,18 @@ class ConvertWorker(QThread):
         self.out_dir = out_dir
         self.combine_all = combine_all
         self.add_header = add_header
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        """Bricht nach der aktuellen Datei ab (eine laufende Datei lässt sich nicht unterbrechen)."""
+        self._cancelled = True
 
     def run(self) -> None:
         results: list[ConversionResult] = []
         total = len(self.files)
         for i, f in enumerate(self.files, start=1):
+            if self._cancelled:
+                break
             self.progress.emit(i, total, f.name)
             r = convert_file(f, self.out_dir, write=not self.combine_all, add_source_header=self.add_header)
             results.append(r)
@@ -396,6 +405,39 @@ class MainWindow(QMainWindow):
         else:
             QTimer.singleShot(800, self.progress.hide)
 
+    # ------------------------------------------------------------------ Beenden
+    def is_busy(self) -> bool:
+        return self.worker is not None and self.worker.isRunning()
+
+    def closeEvent(self, event) -> None:  # noqa: N802
+        """Beenden während einer Umwandlung darf nicht abstürzen.
+
+        Qt bricht hart ab (SIGABRT), wenn ein noch laufender QThread beim
+        Programmende zerstört wird. Deshalb nachfragen, abbrechen und warten.
+        """
+        if not self.is_busy():
+            event.accept()
+            return
+        answer = QMessageBox.question(
+            self,
+            "Umwandlung läuft noch",
+            "Markdrop wandelt gerade noch Dateien um.\n\n"
+            "Trotzdem beenden? Bereits fertige Dateien bleiben erhalten, "
+            "die gerade bearbeitete Datei geht verloren.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            event.ignore()
+            return
+        self.queue.clear()
+        self.worker.cancel()
+        if not self.worker.wait(1500):
+            # Eine einzelne große Datei lässt sich nicht unterbrechen – sofort beenden,
+            # ohne Qt-Aufräumen, das sonst den Absturz auslöst.
+            os._exit(0)
+        event.accept()
+
     # ------------------------------------------------------------------ Aktionen
     def _selected_results(self) -> list[ConversionResult]:
         items = self.list.selectedItems() or ([self.list.item(0)] if self.list.count() else [])
@@ -479,7 +521,11 @@ def main() -> None:
     if args:
         window.enqueue(args)
     app._flush()
-    sys.exit(app.exec())
+    exit_code = app.exec()
+    if window.is_busy():
+        # Sicherheitsnetz (z. B. Abmelden/Herunterfahren): laufenden Thread nicht zerstören.
+        os._exit(exit_code)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
