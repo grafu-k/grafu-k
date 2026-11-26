@@ -20,7 +20,7 @@ jobs:
 
   build:
     needs: test
-    runs-on: macos-14 # Apple Silicon
+    runs-on: macos-latest # aktuelles Apple-Silicon-Image
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
