@@ -7,6 +7,8 @@ Tests genutzt werden kann.
 from __future__ import annotations
 
 import os
+import re
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator
@@ -25,7 +27,6 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset(
         ".html",
         ".htm",
         ".txt",
-        ".md",
         ".epub",
         ".ipynb",
         ".msg",
@@ -40,6 +41,7 @@ LEGACY_HINTS: dict[str, str] = {
     ".key": "Keynote-Datei – bitte in Keynote als .pptx oder .pdf exportieren.",
     ".pages": "Pages-Datei – bitte in Pages als .docx oder .pdf exportieren.",
     ".numbers": "Numbers-Datei – bitte in Numbers als .xlsx oder .csv exportieren.",
+    ".md": "Ist bereits Markdown – übersprungen.",
 }
 
 
@@ -88,11 +90,9 @@ def collect_files(paths: Iterable[str | os.PathLike]) -> list[Path]:
         else:
             candidates = iter([p])
         for f in candidates:
-            if f.suffix.lower() == ".md" and p.is_dir():
-                continue  # bereits erzeugtes Markdown in Ordnern ignorieren
-            if f.suffix.lower() not in SUPPORTED_EXTENSIONS and f.suffix.lower() not in LEGACY_HINTS:
-                if p.is_dir():
-                    continue  # unbekannte Dateien in Ordnern still überspringen
+            ext = f.suffix.lower()
+            if p.is_dir() and ext not in SUPPORTED_EXTENSIONS and (ext not in LEGACY_HINTS or ext == ".md"):
+                continue  # unbekannte Dateien und vorhandenes Markdown in Ordnern still überspringen
             key = f.resolve()
             if key not in seen:
                 seen.add(key)
@@ -131,7 +131,10 @@ def convert_to_markdown(source: Path, add_source_header: bool = True) -> str:
         raise ValueError(f"Format '{ext or 'ohne Endung'}' wird nicht unterstützt.")
 
     result = _get_markitdown().convert(str(source))
-    text = (result.text_content or "").strip()
+    text = result.text_content or ""
+    if ext == ".pdf":
+        text = clean_pdf_text(text)
+    text = text.strip()
     if not text:
         raise ValueError(
             "Kein Text gefunden. Handelt es sich um ein gescanntes PDF (nur Bilder)? "
@@ -140,6 +143,45 @@ def convert_to_markdown(source: Path, add_source_header: bool = True) -> str:
     if add_source_header:
         text = f"<!-- Quelle: {source.name} -->\n\n{text}"
     return text + "\n"
+
+
+_PAGE_NUMBER = re.compile(r"^(seite\s*)?\d{1,4}(\s*(/|von)\s*\d{1,4})?$", re.IGNORECASE)
+
+
+def clean_pdf_text(text: str) -> str:
+    """Macht PDF-Text LLM-freundlicher.
+
+    - Seitenumbrüche (Form-Feed) werden zu sichtbaren Seitenmarken (``## Seite N``),
+      damit sich ein LLM auf konkrete Seiten/Folien beziehen kann.
+    - Kopf-/Fußzeilen, die sich auf den meisten Seiten wiederholen (Vortragstitel,
+      Autor, …), werden entfernt – sie kosten nur Tokens.
+    - Reine Seitenzahlen am Seitenanfang oder -ende werden entfernt.
+    """
+    pages = [pg for pg in text.split("\f")]
+    if pages and not pages[-1].strip():
+        pages.pop()
+    if len(pages) < 2:
+        return text.replace("\f", "\n")
+
+    # Zeilen finden, die auf mindestens 60 % der Seiten vorkommen (Kopf-/Fußzeilen).
+    repeated: set[str] = set()
+    if len(pages) >= 4:
+        counts: Counter[str] = Counter()
+        for pg in pages:
+            counts.update({ln.strip() for ln in pg.splitlines() if len(ln.strip()) > 3})
+        repeated = {ln for ln, n in counts.items() if n >= 0.6 * len(pages)}
+
+    out: list[str] = []
+    for number, pg in enumerate(pages, start=1):
+        lines = [ln for ln in pg.splitlines() if ln.strip() not in repeated]
+        # Seitenzahlen am Anfang/Ende entfernen (Leerzeilen überspringen)
+        for idx in (-1, 0):
+            content = [i for i, ln in enumerate(lines) if ln.strip()]
+            if content and _PAGE_NUMBER.match(lines[content[idx]].strip()):
+                del lines[content[idx]]
+        body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+        out.append(f"## Seite {number}\n\n{body}" if body else f"## Seite {number}\n\n*(keine Textinhalte)*")
+    return "\n\n".join(out)
 
 
 def convert_file(

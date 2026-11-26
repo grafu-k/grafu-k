@@ -14,7 +14,8 @@ Unter der Haube arbeitet [Microsoft MarkItDown](https://github.com/microsoft/mar
 - **Alles in eine Datei**: fasst mehrere Dokumente zu einer Sammeldatei zusammen (gut für ein einzelnes LLM-Upload)
 - **Zwischenablage**: Ergebnis automatisch kopieren und mit ⌘V in den Chat einfügen
 - **Wieder herausziehen**: Einträge aus der Ergebnisliste lassen sich direkt in ein Chatfenster ziehen
-- Vorhandene Dateien werden nie überschrieben (`bericht (2).md`)
+- **PDF-Aufbereitung für LLMs**: Seitenmarken (`## Seite 3`), damit sich das LLM auf Folien/Seiten beziehen kann; wiederkehrende Kopf-/Fußzeilen und Seitenzahlen werden entfernt (spart Tokens)
+- Vorhandene Dateien werden nie überschrieben (`bericht (2).md`); bereits vorhandene `.md`-Dateien werden übersprungen
 - Dark Mode, deutsche Oberfläche
 
 ### Unterstützte Formate
@@ -48,7 +49,7 @@ Unter der Haube arbeitet [Microsoft MarkItDown](https://github.com/microsoft/mar
 Voraussetzung: Python 3.10 oder neuer (z. B. `brew install python`).
 
 ```bash
-git clone https://github.com/<dein-name>/markdrop.git
+git clone https://github.com/grafu-k/markdrop.git
 ```
 
 ```bash

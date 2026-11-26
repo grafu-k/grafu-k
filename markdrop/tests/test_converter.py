@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from markdrop.cli import main as cli_main
-from markdrop.converter import collect_files, combine, convert_file, output_path_for
+from markdrop.converter import clean_pdf_text, collect_files, combine, convert_file
 
 
 @pytest.fixture
@@ -111,9 +111,37 @@ def test_collect_files_recurses_and_skips(tmp_path: Path, docx_file: Path, pptx_
     assert names == {"bericht.docx", "folien.pptx", "notiz.pdf"}
 
 
-def test_md_input_does_not_overwrite_itself(tmp_path: Path):
+def test_markdown_input_is_skipped(tmp_path: Path):
+    """Erneutes Reinziehen von .md-Dateien darf keine x.md.md-Ketten erzeugen."""
     src = tmp_path / "x.md"
-    assert output_path_for(src) == tmp_path / "x.md.md"
+    src.write_text("# schon Markdown")
+    r = convert_file(src)
+    assert not r.ok and "bereits Markdown" in r.error
+    assert not (tmp_path / "x.md.md").exists()
+
+
+def test_pdf_pages_and_repeated_footer(tmp_path: Path):
+    from reportlab.pdfgen import canvas
+
+    path = tmp_path / "folien.pdf"
+    c = canvas.Canvas(str(path))
+    for i in range(1, 6):
+        c.drawString(72, 720, f"Titel Folie {i}")
+        c.drawString(72, 60, "VO Einfuehrung Fusszeile")
+        c.drawString(500, 60, str(i + 1))
+        c.showPage()
+    c.save()
+    r = convert_file(path, write=False)
+    assert r.ok, r.error
+    assert "## Seite 1" in r.markdown and "## Seite 5" in r.markdown
+    assert "Titel Folie 3" in r.markdown
+    assert "Fusszeile" not in r.markdown
+    assert "\f" not in r.markdown
+    assert "\n4\n" not in r.markdown  # Seitenzahl entfernt
+
+
+def test_clean_pdf_text_keeps_single_page():
+    assert clean_pdf_text("nur eine Seite") == "nur eine Seite"
 
 
 def test_combine(docx_file: Path, pptx_file: Path):
