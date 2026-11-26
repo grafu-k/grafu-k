@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "markdrop"
+version = "0.1.0"
+description = "Drag & Drop: PDFs, PowerPoints, Word, Excel & Co. in Markdown für LLMs umwandeln."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "markitdown[pdf,docx,pptx,xlsx,xls,outlook]>=0.1.2",
+    "PySide6>=6.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "python-pptx", "python-docx", "openpyxl", "reportlab", "pyinstaller>=6.6"]
+
+[project.scripts]
+markdrop-cli = "markdrop.cli:main"
+
+[project.gui-scripts]
+markdrop = "markdrop.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
